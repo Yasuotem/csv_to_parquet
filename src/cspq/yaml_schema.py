@@ -10,14 +10,15 @@ class TableConfig(TypedDict):
 
 
 class Config(TypedDict):
-    database: str  # DuckDB データベースファイル名
-    tables: list[TableConfig]  # 複数テーブルの設定リスト
+    db_file: Required[Path]  # DuckDB データベースファイル名
+    data: Required[Path]
+    tables: NotRequired[list[TableConfig]]  # 複数テーブルの設定リスト
 
 
 # schema/*.yaml
 class Schema(TypedDict, tatal=False):
-    skip_rows: NotRequired[list[int] | None]  # スキップする行番号リスト (例: [1])
-    encoding: NotRequired[str | None]
+    skip_rows: Required[list[int] | None]  # スキップする行番号リスト (例: [1])
+    encoding: Required[str | None]
     aliases: NotRequired[list[dict]]
     column_types: NotRequired[list[dict]]
     rates: NotRequired[list[dict]]
