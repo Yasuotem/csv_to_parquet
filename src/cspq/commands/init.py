@@ -16,14 +16,14 @@ def init(path: Path = typer.Argument("", help="")):
 
     try:
         yaml_text = files.joinpath("cspq.yaml").read_text()
-        duck_bytes = files.joinpath("cspq.duckdb").read_bytes()
+        # duck_bytes = files.joinpath("cspq.duckdb").read_bytes()
     except FileNotFoundError as e:
         typer.echo(f"テンプレートファイルが見つかりません: {e}")
         raise typer.Exit(code=1)
 
     try:
         path.joinpath("cspq.yaml").write_text(yaml_text)
-        path.joinpath("cspq.duckdb").write_bytes(duck_bytes)
+        # path.joinpath("cspq.duckdb").write_bytes(duck_bytes)
     except OSError as e:
         typer.echo(f"ファイルの書き込みに失敗しました: {e}")
         raise typer.Exit(code=1)

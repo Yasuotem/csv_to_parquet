@@ -1,6 +1,2 @@
-database: "cspq.duckdb"
+db_file: "cspq.duckdb"
 data: "data/"
-tables:
-  - name: "TBL01"
-    pattern: "TBL01_*.csv"
-    schema: "schema/TBL01.yaml"

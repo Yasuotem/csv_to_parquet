@@ -11,6 +11,8 @@ wheels/
 
 temp/*
 
+.vscode
 *.duckdb
 *.html
 *files/
+*.parquet
