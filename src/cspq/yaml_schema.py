@@ -16,12 +16,16 @@ class Config(TypedDict):
 
 
 # schema/*.yaml
-class Schema(TypedDict, tatal=False):
+class Schema(TypedDict, total=False):
     skip_rows: Required[list[int] | None]  # スキップする行番号リスト (例: [1])
     encoding: Required[str | None]
-    aliases: NotRequired[list[dict]]
-    column_types: NotRequired[list[dict]]
-    rates: NotRequired[list[dict]]
+    aliases: NotRequired[list[dict[str, str]]]
+    column_types: NotRequired[list[dict[str, str]]]
+    rates: NotRequired[list[dict[str, float]]]
+
+
+def test():
+    print("hello")
 
 
 # ファイル名管理テーブルの定義

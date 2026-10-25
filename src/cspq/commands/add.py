@@ -1,26 +1,12 @@
 import typer
+import yaml
 import duckdb
 from pathlib import Path
 from typing import Annotated
 import importlib.resources as res
-
-app = typer.Typer()
-
-
-def main():
-    app()
+import cspq.yaml_schema as ys
 
 
-@app.command()
-def init(path: Path = typer.Argument("", help="")):
-    """
-    データ置き場の雛形を作成するコマンドです
-    実行すると csvpq.yaml csvpq.duckdb data/ が生成されます
-    """
-    print("Hello")
-
-
-@app.command()
 def add(
     csv: Annotated[Path, typer.Argument(help="csv ファイルのパス")],
     name: Annotated[str | None, typer.Argument(help="テーブル/ディレクトリ名")] = None,
@@ -36,15 +22,7 @@ def add(
     if not csv.exists():
         typer.echo("csv ファイルが見つかりませんでした")
         return
+
     # name が指定されていない場合csvファイル名をテーブル名とする
     if name is None:
         name = csv.stem()
-
-
-@app.command()
-def load(csv: Annotated[list[Path], typer.Argument()]):
-    """
-    csvpq.yaml のスキーマを元に csv を parquet に変換します
-    """
-    for e in csv:
-        print(e)
