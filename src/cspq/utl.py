@@ -1,33 +1,39 @@
+from dataclasses import asdict
 from pathlib import Path
-from cspq.commands.toplevel import toplevel
-import cspq.yaml_schema as ys
+
+import typer
 import yaml
 
+from cspq.commands.toplevel import toplevel
+from cspq.yaml_schema import Config, Schema
 
-def load_config() -> ys.Config | None:
+
+def load_config() -> Config:
     root = toplevel()
     if root == None:
-        return None
+        raise typer.Exit(code=1)
+
     config_path = root / "cspq.yaml"
     with config_path.open("r", encoding="utf-8") as f:
-        config: ys.Config = yaml.safe_load(f)
+        config = Config(**yaml.safe_load(f))
 
     return config
 
 
-def load_schema(path: Path) -> ys.Schema | None:
+def load_schema(path: Path) -> Schema:
     root = toplevel()
     if root == None:
-        return None
+        raise typer.Exit(code=1)
+
     schema_path = root / path
     with schema_path.open("r", encoding="utf-8") as f:
-        schema: ys.Schema = yaml.safe_load(f)
+        schema = Schema(**yaml.safe_load(f))
 
     return schema
 
 
-def write_config(config: ys.Config):
+def write_config(config: Config):
     root = toplevel()
     config_path = root / "cspq.yaml"
     with config_path.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(config, f, allow_unicode=True)
+        yaml.safe_dump(asdict(config), f, sort_keys=False, allow_unicode=True)

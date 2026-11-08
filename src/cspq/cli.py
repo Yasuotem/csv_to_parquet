@@ -1,5 +1,6 @@
 import typer
-from .commands import init, add, load, toplevel
+
+from .commands import add, init, load, toplevel
 
 app = typer.Typer(help="csvファイルをpqに変換します")
 

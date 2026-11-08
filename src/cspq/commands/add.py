@@ -1,12 +1,15 @@
-import typer
-import yaml
-import duckdb
+from dataclasses import asdict
 from pathlib import Path
 from typing import Annotated
-import importlib.resources as res
-import cspq.yaml_schema as ys
+
+import duckdb
+import typer
+import yaml
+
+from cspq import utl
+from cspq.yaml_schema import Schema, Table
+
 from .toplevel import toplevel
-import cspq.utl as utl
 
 
 def add(
@@ -15,9 +18,13 @@ def add(
     encoding: Annotated[
         str, typer.Option(help="csvファイルのエンコード")
     ] = "SHIFT_JIS",
-    skip: Annotated[int, typer.Option(help="csvファイルのスキップする行数")] = 0,
+    skip: Annotated[
+        int, typer.Option(help="csvファイルのヘッダー前のスキップする行数")
+    ] = 0,
+    offset: Annotated[
+        int, typer.Option(help="csvファイルのヘッダー後のスキップする行数")
+    ] = 0,
     alias: Annotated[bool, typer.Option(help="")] = False,
-    type_info: Annotated[bool, typer.Option()] = False,
     rate: Annotated[bool, typer.Option()] = False,
 ):
     """
@@ -33,57 +40,58 @@ def add(
     if name is None:
         name = csv.stem
 
-    root = toplevel()
+    schema = get_schema(
+        csv=csv,
+        alias=alias,
+        encoding=encoding,
+        name=name,
+        skip=skip,
+        offset=offset,
+        rate=rate,
+    )
 
-    if root == None:
+    # schemaを保存
+    root = toplevel()
+    if root is None:
         typer.echo("cspq.yamlが見つかりませんでした")
         return
 
-    with (root / "cspq.yaml").open("r", encoding="utf-8") as f:
-        config: ys.Config = yaml.safe_load(f)
-
-    # csvファイルから、列名と型を取得する
-    columns = duckdb.sql(f"""
-    SELECT * FROM read_csv_auto('{str(csv.resolve())}', encoding='{encoding}') LIMIT 1
-    """).columns
-
-    desc = duckdb.sql(f"""
-    DESCRIBE SELECT * FROM read_csv_auto('{str(csv.resolve())}', encoding='{encoding}', skip={skip+1}, header=false) LIMIT 1
-    """).fetchall()
-
-    types = [row[1] for row in desc]
-    # schemaを作成
-    schema: ys.Schema = {
-        "name": name,
-        "pattern": name,
-        "encoding": encoding,
-        "skip_rows": skip,
-        "columns": columns,
-    }
-
-    if alias:
-        schema["aliases"] = {col: col for col in columns}
-    if type_info:
-        schema["types"] = {col: typ for col, typ in zip(columns, types)}
-    if rate:
-        schema["rates"] = {col: 1.0 for col in columns}
-
-    # schemaを保存
     schema_file = name + ".yaml"
     schema_path = root / "schemas" / schema_file
     schema_path.parent.mkdir(parents=True, exist_ok=True)
     with schema_path.open("w", encoding="utf-8") as f:
-        yaml.safe_dump(schema, f, allow_unicode=True)
+        yaml.safe_dump(asdict(schema), f, sort_keys=False, allow_unicode=True)
 
     # cspq.yamlにテーブル情報を追加
     config = utl.load_config()
 
-    if "tables" in config:
-        tables = config["tables"]
-    else:
-        tables = {}
+    tables = config.tables
 
-    tables[name] = {"path": "schemas/" + schema_file, "pattern": csv.name}
-    config["tables"] = tables
+    tables[name] = Table(path="schemas/" + schema_file, pattern=csv.name)
+    config.tables = tables
 
     utl.write_config(config)
+
+
+def get_schema(
+    csv: Path, encoding: str, skip: int, offset: int, name: str, alias: bool, rate: bool
+) -> Schema:
+    columns = duckdb.sql(f"""
+    SELECT * FROM read_csv_auto('{csv.resolve()!s}', encoding='{encoding}') LIMIT 1
+    """).columns
+
+    desc = duckdb.sql(f"""
+    DESCRIBE SELECT * FROM read_csv_auto('{csv.resolve()!s}', encoding='{encoding}', skip={skip + 1 + offset}, header=false) LIMIT 1
+    """).fetchall()
+    types = [row[1] for row in desc]
+    # schemaを作成
+    schema = Schema(name=name, encoding=encoding, skip=skip, columns=columns)
+
+    schema.types = {col: typ for col, typ in zip(columns, types)}
+
+    if alias:
+        schema.aliases = {col: col for col in columns}
+    if rate:
+        schema.rates = {col: 1.0 for col in columns}
+
+    return schema

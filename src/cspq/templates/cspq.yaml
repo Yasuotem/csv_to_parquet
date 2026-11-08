@@ -1,2 +1,3 @@
 db_file: "cspq.duckdb"
 data: "data/"
+tables: {}
