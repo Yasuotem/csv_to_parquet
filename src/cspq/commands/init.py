@@ -1,13 +1,11 @@
-import typer
-from pathlib import Path
-import duckdb
+import importlib.resources as res
 from pathlib import Path
 from typing import Annotated
-import importlib.resources as res
-import cspq.yaml_schema as ys
+
+import typer
 
 
-def init(path: Path = typer.Argument("", help="")):
+def init(path: Annotated[Path, typer.Argument(help="")] = Path("")):
     """
     データ置き場の雛形を作成するコマンドです
     実行すると csvpq.yaml csvpq.duckdb data/ が生成されます
@@ -22,7 +20,9 @@ def init(path: Path = typer.Argument("", help="")):
         raise typer.Exit(code=1)
 
     try:
-        path.joinpath("cspq.yaml").write_text(yaml_text)
+        config_file = path / "cspq.yaml"
+        config_file.parent.mkdir(parents=True, exist_ok=True)
+        config_file.write_text(yaml_text)
         # path.joinpath("cspq.duckdb").write_bytes(duck_bytes)
     except OSError as e:
         typer.echo(f"ファイルの書き込みに失敗しました: {e}")

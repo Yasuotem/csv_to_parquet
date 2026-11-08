@@ -1,29 +1,31 @@
-from typing import TypedDict, Required, NotRequired
+from dataclasses import dataclass, field
 
 
-class Table(TypedDict):
-    path: Required[str]
-    pattern: Required[str]
+@dataclass
+class Table:
+    path: str
+    pattern: str
 
 
 # cspq.yaml
-class Config(TypedDict):
-    db_file: Required[str]  # DuckDB データベースファイル名
-    data: Required[str]
-    tables: NotRequired[
-        dict[str, Table]
-    ]  # 複数テーブルの設定リスト[テーブル名, schemaのパス]
+@dataclass
+class Config:
+    db_file: str
+    data: str
+    tables: dict[str, Table] = field(default_factory=dict)
 
 
 # schema/*.yaml
-class Schema(TypedDict, total=False):
-    name: Required[str]
-    skip_rows: Required[list[int] | None]  # スキップする行番号リスト (例: [1])
-    encoding: Required[str | None]
-    columns: Required[list[str]]
-    aliases: NotRequired[list[dict[str, str]]]
-    types: NotRequired[list[dict[str, str]]]
-    rates: NotRequired[list[dict[str, float]]]
+@dataclass
+class Schema:
+    name: str
+    columns: list[str]
+    skip: int = 0  # ヘッダー前のスキップする行数
+    offset: int = 0  # ヘッダー後のスキップする行数
+    encoding: str = "SHIFT_JIS"
+    types: dict[str, str] = field(default_factory=dict)
+    aliases: dict[str, str] = field(default_factory=dict)
+    rates: dict[str, float] = field(default_factory=dict)
 
 
 def test():
